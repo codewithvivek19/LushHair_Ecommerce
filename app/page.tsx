@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { getFeaturedProducts } from "@/lib/api"
 import { ProductCard } from "@/components/product-card"
 import { ArrowRight, Check, Star } from "lucide-react"
+import { DirectAdminAccess } from "@/components/direct-admin-access"
 
 export default function Home() {
   const featuredProducts = getFeaturedProducts()
@@ -175,6 +176,9 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      {/* Admin Access Section */}
+      <AdminAccessSection />
     </div>
   )
 }
@@ -265,6 +269,20 @@ function TestimonialCard({
         </div>
       </CardContent>
     </Card>
+  )
+}
+
+function AdminAccessSection() {
+  return (
+    <section className="container py-8 border-t">
+      <div className="flex flex-col items-center text-center max-w-md mx-auto">
+        <h3 className="text-xl font-semibold mb-4">Admin Access</h3>
+        <p className="text-muted-foreground mb-6">
+          Quick access to the admin dashboard for store management.
+        </p>
+        <DirectAdminAccess />
+      </div>
+    </section>
   )
 }
 

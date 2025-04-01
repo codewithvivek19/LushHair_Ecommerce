@@ -4,12 +4,14 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminAuth } from "@/components/admin-auth-provider"
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner"
+import { Separator } from "@/components/ui/separator"
+import { DirectAdminAccess } from "@/components/direct-admin-access"
 
 export default function AdminLoginPage() {
   const router = useRouter()
@@ -112,6 +114,13 @@ export default function AdminLoginPage() {
             </div>
           </form>
         </CardContent>
+        <CardFooter className="flex flex-col">
+          <Separator className="my-4" />
+          <div className="text-center mb-4">
+            <p className="text-sm text-muted-foreground">Or use direct access</p>
+          </div>
+          <DirectAdminAccess />
+        </CardFooter>
       </Card>
     </div>
   )

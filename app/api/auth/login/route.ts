@@ -27,8 +27,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if the user is suspended
-    if (user.status === UserStatus.SUSPENDED) {
+    // Check if the user is suspended - only if status field exists
+    if (user.status && user.status === 'SUSPENDED') {
       return NextResponse.json(
         { error: 'Account is suspended. Please contact support.' },
         { status: 403 }

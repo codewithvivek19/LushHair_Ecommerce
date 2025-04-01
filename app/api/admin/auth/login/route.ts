@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createSession, setAuthCookie, validatePassword } from '@/lib/auth';
-import { UserRole, UserStatus } from '@prisma/client';
+import { UserRole } from '@prisma/client';
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,8 +35,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if the user is suspended - safely check status if it exists
-    if (user.status === UserStatus.SUSPENDED) {
+    // Check if the user is suspended - only if status field exists
+    if (user.status && user.status === 'SUSPENDED') {
       return NextResponse.json(
         { error: 'Account is suspended. Please contact support.' },
         { status: 403 }
