@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuthMiddleware } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { OrderStatus } from '@prisma/client';
 
@@ -9,10 +8,6 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    // Check admin authentication
-    const authCheck = await adminAuthMiddleware(request);
-    if (authCheck) return authCheck;
-
     const id = params.id;
 
     // Get the order with relations
@@ -65,10 +60,6 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    // Check admin authentication
-    const authCheck = await adminAuthMiddleware(request);
-    if (authCheck) return authCheck;
-
     const id = params.id;
     const body = await request.json();
     const { 

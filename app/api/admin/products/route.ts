@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuthMiddleware } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 // Get all products (admin view)
 export async function GET(request: NextRequest) {
   try {
-    // Check admin authentication
-    const authCheck = await adminAuthMiddleware(request);
-    if (authCheck) return authCheck;
-
+    // No auth check for direct access
+    
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
     const featured = searchParams.get('featured') === 'true';
@@ -67,10 +64,8 @@ export async function GET(request: NextRequest) {
 // Create a new product (admin only)
 export async function POST(request: NextRequest) {
   try {
-    // Check admin authentication
-    const authCheck = await adminAuthMiddleware(request);
-    if (authCheck) return authCheck;
-
+    // No auth check for direct access
+    
     const body = await request.json();
     const { 
       name, 

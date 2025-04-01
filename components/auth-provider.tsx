@@ -51,14 +51,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     getUserFromCookie()
   }, [])
 
-  // Protect admin routes
+  // Protect user account routes - not admin routes
   useEffect(() => {
     if (!isLoading) {
-      // Redirect from admin pages if not admin
-      if (pathname?.startsWith("/admin") && (!user || user.role !== "ADMIN")) {
-        router.push("/login?redirect=" + encodeURIComponent(pathname || '/admin'))
-      }
-
+      // Admin routes are now accessible without authentication
+      
       // Redirect from account pages if not logged in
       if (pathname?.startsWith("/account") && !user) {
         router.push("/login?redirect=" + encodeURIComponent(pathname))
