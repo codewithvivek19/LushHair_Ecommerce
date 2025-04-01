@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import AdminLayout from "@/components/admin/AdminLayout"
 import { formatCurrency, formatDate } from "@/lib/utils"
 import { Order, OrderStatus } from "@prisma/client"
-import LoadingSpinner from "@/components/ui/LoadingSpinner"
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner"
 
 type OrderWithRelations = Order & {
   user: {

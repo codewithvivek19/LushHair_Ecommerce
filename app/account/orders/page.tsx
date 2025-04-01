@@ -4,7 +4,7 @@ import { useState, useEffect, useId } from 'react';
 import Link from 'next/link';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Order, OrderStatus } from '@prisma/client';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 type OrderWithRelations = Order & {
   items: Array<{

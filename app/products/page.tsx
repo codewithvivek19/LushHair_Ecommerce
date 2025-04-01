@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { ProductCard } from "@/components/product-card"
 import { ProductFilters } from "@/components/product-filters"
-import LoadingSpinner from "@/components/ui/LoadingSpinner"
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner"
 
 type Product = {
   id: string

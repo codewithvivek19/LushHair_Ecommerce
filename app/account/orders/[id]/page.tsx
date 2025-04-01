@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator"
 import { Invoice } from "@/components/invoice"
 import { Order, OrderStatus } from "@prisma/client"
-import LoadingSpinner from "@/components/ui/LoadingSpinner"
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner"
 import { formatCurrency, formatDate } from "@/lib/utils"
 
 // Define types for what comes from API

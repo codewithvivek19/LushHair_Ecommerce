@@ -13,8 +13,35 @@ import { SalesChart } from "@/components/admin/sales-chart"
 // Adding useId hook to generate stable IDs for elements
 import { useId } from "react"
 
+// Dashboard stats type
+interface DashboardStats {
+  totalRevenue: number;
+  totalOrders: number;
+  totalProducts: number;
+  totalCustomers: number;
+  revenueGrowth: number;
+  orderGrowth: number;
+  newProducts: number;
+  customerGrowth: number;
+}
+
+// Default stats for loading state
+const defaultStats: DashboardStats = {
+  totalRevenue: 0,
+  totalOrders: 0,
+  totalProducts: 0,
+  totalCustomers: 0,
+  revenueGrowth: 0,
+  orderGrowth: 0,
+  newProducts: 0,
+  customerGrowth: 0
+};
+
 export default function AdminDashboardPage() {
   const [isClient, setIsClient] = useState(false)
+  const [stats, setStats] = useState<DashboardStats>(defaultStats)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   
   // Generate stable IDs for tabs
   const salesTabId = useId()
@@ -23,7 +50,29 @@ export default function AdminDashboardPage() {
   
   useEffect(() => {
     setIsClient(true)
-  }, [])
+    
+    async function fetchDashboardData() {
+      try {
+        const response = await fetch('/api/admin/dashboard/stats')
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch dashboard statistics')
+        }
+        
+        const data = await response.json()
+        setStats(data)
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error)
+        setError('Failed to load dashboard data')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    if (isClient) {
+      fetchDashboardData()
+    }
+  }, [isClient])
   
   // Only render after client-side hydration to prevent mismatch
   if (!isClient) {
@@ -37,13 +86,24 @@ export default function AdminDashboardPage() {
     )
   }
 
+  // Format currency function
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2
+    }).format(amount);
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <Button>
-          <Package className="mr-2 h-4 w-4" />
-          Add New Product
+        <Button asChild>
+          <Link href="/admin/products/new">
+            <Package className="mr-2 h-4 w-4" />
+            Add New Product
+          </Link>
         </Button>
       </div>
 
@@ -51,27 +111,31 @@ export default function AdminDashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Total Revenue"
-          value="$12,548.42"
-          description="+12.5% from last month"
+          value={isLoading ? "Loading..." : formatCurrency(stats.totalRevenue)}
+          description={`${stats.revenueGrowth > 0 ? '+' : ''}${stats.revenueGrowth.toFixed(1)}% from last month`}
           icon={<DollarSign className="h-5 w-5" />}
+          isPositive={stats.revenueGrowth >= 0}
         />
         <StatsCard
           title="Orders"
-          value="324"
-          description="+8.2% from last month"
+          value={isLoading ? "Loading..." : stats.totalOrders.toString()}
+          description={`${stats.orderGrowth > 0 ? '+' : ''}${stats.orderGrowth.toFixed(1)}% from last month`}
           icon={<ShoppingCart className="h-5 w-5" />}
+          isPositive={stats.orderGrowth >= 0}
         />
         <StatsCard
           title="Products"
-          value="56"
-          description="4 added this month"
+          value={isLoading ? "Loading..." : stats.totalProducts.toString()}
+          description={`${stats.newProducts} added this month`}
           icon={<Package className="h-5 w-5" />}
+          isPositive={stats.newProducts > 0}
         />
         <StatsCard
           title="Customers"
-          value="1,429"
-          description="+24.5% from last month"
+          value={isLoading ? "Loading..." : stats.totalCustomers.toString()}
+          description={`${stats.customerGrowth > 0 ? '+' : ''}${stats.customerGrowth.toFixed(1)}% from last month`}
           icon={<Users className="h-5 w-5" />}
+          isPositive={stats.customerGrowth >= 0}
         />
       </div>
 
@@ -122,7 +186,7 @@ export default function AdminDashboardPage() {
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>Recent Orders</CardTitle>
-            <CardDescription>You have 12 new orders today</CardDescription>
+            <CardDescription>Latest orders from your customers</CardDescription>
           </div>
           <Button variant="outline" size="sm" asChild>
             <Link href="/admin/orders">
@@ -148,7 +212,7 @@ export default function AdminDashboardPage() {
           description="View and process pending orders"
           href="/admin/orders?status=pending"
         />
-        <QuickActionCard title="Update Inventory" description="Check and update stock levels" href="/admin/inventory" />
+        <QuickActionCard title="Update Inventory" description="Check and update stock levels" href="/admin/products" />
       </div>
     </div>
   )
@@ -159,11 +223,13 @@ function StatsCard({
   value,
   description,
   icon,
+  isPositive = true,
 }: {
   title: string
   value: string
   description: string
   icon: React.ReactNode
+  isPositive?: boolean
 }) {
   return (
     <Card>
@@ -175,8 +241,8 @@ function StatsCard({
             <p className="text-2xl font-bold">{value}</p>
           </div>
         </div>
-        <div className="mt-4 flex items-center text-sm text-green-600">
-          <ArrowUpRight className="mr-1 h-4 w-4" />
+        <div className={`mt-4 flex items-center text-sm ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+          {isPositive ? <ArrowUpRight className="mr-1 h-4 w-4" /> : <ArrowUpRight className="mr-1 h-4 w-4 rotate-180" />}
           {description}
         </div>
       </CardContent>
