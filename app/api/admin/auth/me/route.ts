@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getUserFromSession } from '@/lib/auth';
+import { getCurrentUser } from '@/lib/auth';
 import { UserRole } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getUserFromSession();
+    const user = await getCurrentUser(request);
 
     if (!user) {
       return NextResponse.json({ 

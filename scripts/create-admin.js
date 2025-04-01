@@ -1,55 +1,48 @@
-// Create admin user with fresh bcrypt hash
+/**
+ * This script creates an admin user in the database.
+ * Run with: node scripts/create-admin.js
+ */
+
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 
 const prisma = new PrismaClient();
 
-async function createAdminUser() {
+async function main() {
+  // Admin credentials - you can modify these as needed
+  const adminEmail = 'admin@example.com';
+  const adminPassword = 'admin123';
+  const adminName = 'Admin User';
+
   try {
-    // Delete existing admin users
-    await prisma.user.deleteMany({
-      where: {
-        email: 'admin@example.com'
-      }
+    // Check if admin already exists
+    const existingAdmin = await prisma.user.findUnique({
+      where: { email: adminEmail }
     });
 
-    // Create fresh hash
-    const password = 'admin123';
-    const hash = await bcrypt.hash(password, 10);
-    
-    console.log('Generated hash:', hash);
-    
-    // Verify hash works
-    const verify = await bcrypt.compare(password, hash);
-    console.log('Hash verification:', verify);
+    if (existingAdmin) {
+      console.log('Admin user already exists!');
+      return;
+    }
 
-    // Create admin user
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(adminPassword, 10);
+
+    // Create the admin user
     const admin = await prisma.user.create({
       data: {
-        name: 'Admin User',
-        email: 'admin@example.com',
-        password: hash,
+        email: adminEmail,
+        name: adminName,
+        password: hashedPassword,
         role: 'ADMIN',
-        phone: '800-555-0000',
-        street: '1 Admin Plaza',
-        city: 'San Francisco',
-        state: 'CA',
-        zip: '94107',
-        country: 'United States',
+        status: 'ACTIVE'
       }
     });
 
-    console.log('Admin user created successfully!');
-    console.log('Admin user:', admin.email);
-    
-    // Verify DB password
-    const dbUser = await prisma.user.findUnique({
-      where: { email: 'admin@example.com' }
-    });
-    
-    const dbVerify = await bcrypt.compare(password, dbUser.password);
-    console.log('DB password verification:', dbVerify);
-
+    console.log('Admin user created successfully:');
+    console.log(`Email: ${adminEmail}`);
+    console.log(`Password: ${adminPassword}`);
+    console.log('Role: ADMIN');
   } catch (error) {
     console.error('Error creating admin user:', error);
   } finally {
@@ -57,4 +50,4 @@ async function createAdminUser() {
   }
 }
 
-createAdminUser(); 
+main(); 

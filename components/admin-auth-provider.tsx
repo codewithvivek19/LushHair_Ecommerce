@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { useRouter, usePathname } from "next/navigation"
+import { useToast } from "@/components/ui/use-toast"
 
 export interface AdminUser {
   id: string
@@ -23,6 +24,7 @@ const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefin
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
+  const { toast } = useToast()
   const [admin, setAdmin] = useState<AdminUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -31,12 +33,16 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     const getAdminFromCookie = async () => {
       try {
         const response = await fetch('/api/admin/auth/me')
-        if (response.ok) {
-          const data = await response.json()
+        const data = await response.json()
+        
+        if (response.ok && data.authenticated) {
           setAdmin(data.admin)
+        } else {
+          setAdmin(null)
         }
       } catch (error) {
         console.error('Failed to get admin from cookie:', error)
+        setAdmin(null)
       } finally {
         setIsLoading(false)
       }
@@ -50,6 +56,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     if (!isLoading) {
       // Redirect from admin pages if not authenticated as admin
       if (pathname?.startsWith("/admin") && !admin && pathname !== "/admin") {
+        console.log("Redirecting to admin login because not authenticated")
         router.push("/admin")
       }
     }
@@ -74,11 +81,22 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false)
         return true
       } else {
+        console.error('Admin login failed:', data.error || 'Unknown error')
+        toast({
+          title: "Login failed",
+          description: data.error || "Authentication failed",
+          variant: "destructive"
+        })
         setIsLoading(false)
         return false
       }
     } catch (error) {
       console.error('Admin login error:', error)
+      toast({
+        title: "Login error",
+        description: "An unexpected error occurred",
+        variant: "destructive"
+      })
       setIsLoading(false)
       return false
     }
@@ -93,6 +111,11 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       router.push("/admin")
     } catch (error) {
       console.error('Admin logout error:', error)
+      toast({
+        title: "Logout error",
+        description: "An unexpected error occurred during logout",
+        variant: "destructive"
+      })
     }
   }
 
