@@ -17,7 +17,7 @@ import { BarChart3, Box, Home, LogOut, Package, Settings, ShoppingCart, Users } 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { useAuth } from "@/components/auth-provider"
+import { useAdminAuth } from "@/components/admin-auth-provider"
 
 export default function AdminLayout({
   children,
@@ -25,15 +25,15 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
-  const { user, logout, isAuthenticated, isAdmin } = useAuth()
+  const { admin, isAuthenticated } = useAdminAuth()
 
   // Only render admin layout if we're in the admin section
   if (pathname === "/admin") {
     return children
   }
 
-  // If not authenticated or not admin, show only the children (which should be the login page)
-  if (!isAuthenticated || !isAdmin) {
+  // If not authenticated as admin, show only the children (which should be the login page)
+  if (!isAuthenticated) {
     return children
   }
 
@@ -55,7 +55,7 @@ export default function AdminLayout({
               </Button>
               <Avatar>
                 <AvatarImage src="/placeholder-user.jpg" alt="Admin" />
-                <AvatarFallback>AD</AvatarFallback>
+                <AvatarFallback>{admin?.name?.charAt(0) || 'A'}</AvatarFallback>
               </Avatar>
             </div>
           </header>
@@ -68,7 +68,7 @@ export default function AdminLayout({
 
 function AdminSidebar() {
   const pathname = usePathname()
-  const { logout } = useAuth()
+  const { logout } = useAdminAuth()
 
   return (
     <Sidebar>

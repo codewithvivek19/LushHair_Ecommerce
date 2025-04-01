@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Menu, Search, ShoppingBag, User, Settings, LogOut } from "lucide-react"
+import { Menu, Search, ShoppingBag, User, Settings, LogOut, Shield } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -16,12 +16,14 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useCart } from "@/components/cart-provider"
 import { useAuth } from "@/components/auth-provider"
+import { useAdminAuth } from "@/components/admin-auth-provider"
 import { MobileNav } from "@/components/mobile-nav"
 import { CartSheet } from "@/components/cart-sheet"
 
 export function Header() {
   const { cart } = useCart()
-  const { user, logout, isAuthenticated, isAdmin } = useAuth()
+  const { user, logout, isAuthenticated } = useAuth()
+  const { admin, isAuthenticated: isAdminAuthenticated, logout: adminLogout } = useAdminAuth()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
 
@@ -79,7 +81,7 @@ export function Header() {
         <div className="flex items-center gap-4">
           {isSearchOpen ? (
             <div className="flex w-full max-w-sm items-center gap-2">
-              <Input placeholder="Search products..." className="h-9" autoFocus onBlur={() => setIsSearchOpen(false)} />
+              <Input placeholder="Search products..." className="h-9" autoFocus onBlur={() => setIsSearchOpen(false)} suppressHydrationWarning />
               <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(false)}>
                 <span className="sr-only">Close search</span>
                 &times;
@@ -92,6 +94,47 @@ export function Header() {
             </Button>
           )}
 
+          {/* Admin Dashboard or Login Button */}
+          {isAdminAuthenticated ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="hidden md:flex items-center gap-2">
+                  <Shield className="h-4 w-4" />
+                  <span>Admin</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>
+                  Admin: {admin?.name}
+                  <p className="text-xs font-normal text-muted-foreground">{admin?.email}</p>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/dashboard">Dashboard</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/products">Products</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/orders">Orders</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={adminLogout} className="flex items-center">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout (Admin)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button variant="outline" size="sm" asChild className="hidden md:flex">
+              <Link href="/admin" className="flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                <span>Admin Login</span>
+              </Link>
+            </Button>
+          )}
+
+          {/* User Account Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -116,17 +159,6 @@ export function Header() {
                   <DropdownMenuItem asChild>
                     <Link href="/account/profile">Profile</Link>
                   </DropdownMenuItem>
-                  {isAdmin && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link href="/admin/dashboard" className="flex items-center">
-                          <Settings className="mr-2 h-4 w-4" />
-                          Admin Dashboard
-                        </Link>
-                      </DropdownMenuItem>
-                    </>
-                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout} className="flex items-center">
                     <LogOut className="mr-2 h-4 w-4" />
