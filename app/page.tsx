@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { getFeaturedProducts } from "@/lib/api"
 import { ProductCard } from "@/components/product-card"
-import { ArrowRight, Check, Star } from "lucide-react"
-import { DirectAdminAccess } from "@/components/direct-admin-access"
+import { ArrowRight, Check, Star, Shield } from "lucide-react"
 
 export default function Home() {
   const featuredProducts = getFeaturedProducts()
@@ -280,7 +279,12 @@ function AdminAccessSection() {
         <p className="text-muted-foreground mb-6">
           Quick access to the admin dashboard for store management.
         </p>
-        <DirectAdminAccess />
+        <Button asChild size="lg" className="gap-2">
+          <Link href="/admin/dashboard">
+            <Shield className="h-5 w-5" />
+            <span>Access Admin Dashboard</span>
+          </Link>
+        </Button>
       </div>
     </section>
   )

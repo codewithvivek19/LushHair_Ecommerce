@@ -16,14 +16,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useCart } from "@/components/cart-provider"
 import { useAuth } from "@/components/auth-provider"
-import { useAdminAuth } from "@/components/admin-auth-provider"
 import { MobileNav } from "@/components/mobile-nav"
 import { CartSheet } from "@/components/cart-sheet"
 
 export function Header() {
   const { cart } = useCart()
   const { user, logout, isAuthenticated } = useAuth()
-  const { admin, isAuthenticated: isAdminAuthenticated, logout: adminLogout } = useAdminAuth()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
 
@@ -94,45 +92,13 @@ export function Header() {
             </Button>
           )}
 
-          {/* Admin Dashboard or Login Button */}
-          {isAdminAuthenticated ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="hidden md:flex items-center gap-2">
-                  <Shield className="h-4 w-4" />
-                  <span>Admin</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>
-                  Admin: {admin?.name}
-                  <p className="text-xs font-normal text-muted-foreground">{admin?.email}</p>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/admin/dashboard">Dashboard</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/admin/products">Products</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/admin/orders">Orders</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={adminLogout} className="flex items-center">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Logout (Admin)
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <Button variant="outline" size="sm" asChild className="hidden md:flex">
-              <Link href="/admin" className="flex items-center gap-2">
-                <Shield className="h-4 w-4" />
-                <span>Admin Login</span>
-              </Link>
-            </Button>
-          )}
+          {/* Direct Admin Access Button */}
+          <Button variant="outline" size="sm" asChild className="hidden md:flex items-center gap-2">
+            <Link href="/admin/dashboard">
+              <Shield className="h-4 w-4" />
+              <span>Admin</span>
+            </Link>
+          </Button>
 
           {/* User Account Menu */}
           <DropdownMenu>
@@ -174,6 +140,13 @@ export function Header() {
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/register">Register</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin/dashboard" className="flex items-center">
+                      <Shield className="mr-2 h-4 w-4" />
+                      Admin Dashboard
+                    </Link>
                   </DropdownMenuItem>
                 </>
               )}
