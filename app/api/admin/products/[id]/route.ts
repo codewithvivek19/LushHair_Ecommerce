@@ -27,7 +27,7 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(product);
+    return NextResponse.json({ product });
   } catch (error) {
     console.error('Error fetching product (admin):', error);
     return NextResponse.json(
@@ -70,6 +70,12 @@ export async function PUT(
         { status: 404 }
       );
     }
+
+    console.log('Updating product with data:', { 
+      id, name, description, price, category, 
+      colorsCount: colors?.length,
+      lengthsCount: lengths?.length
+    });
 
     // Update the product with transaction
     await prisma.$transaction(async (tx) => {
@@ -114,10 +120,11 @@ export async function PUT(
         });
 
         // Add new lengths
-        for (const length of lengths) {
+        for (const lengthItem of lengths) {
           await tx.productLength.create({
             data: {
-              length,
+              // Handle both formats: { length: "value" } or "value"
+              length: typeof lengthItem === 'object' ? lengthItem.length : lengthItem,
               productId: id,
             },
           });
@@ -199,10 +206,7 @@ export async function DELETE(
       });
     });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Product deleted successfully',
-    });
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting product:', error);
     return NextResponse.json(

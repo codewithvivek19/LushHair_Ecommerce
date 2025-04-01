@@ -87,6 +87,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log('Creating product with data:', { 
+      name, description, price, category, 
+      colorsCount: colors?.length,
+      lengthsCount: lengths?.length
+    });
+
     // Create the product with transaction to ensure all related data is created correctly
     const product = await prisma.$transaction(async (tx) => {
       // Create the product
@@ -115,12 +121,13 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Add lengths
+      // Add lengths - handle as objects with length property
       if (lengths && lengths.length > 0) {
-        for (const length of lengths) {
+        for (const lengthItem of lengths) {
           await tx.productLength.create({
             data: {
-              length,
+              // Handle both formats: { length: "value" } or "value"
+              length: typeof lengthItem === 'object' ? lengthItem.length : lengthItem,
               productId: newProduct.id,
             },
           });
