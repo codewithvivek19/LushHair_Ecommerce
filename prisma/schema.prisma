@@ -1,0 +1,141 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING
+}
+
+model User {
+  id        String     @id @default(uuid())
+  name      String
+  email     String     @unique
+  password  String
+  role      UserRole   @default(USER)
+  status    UserStatus @default(ACTIVE)
+  phone     String?
+  street    String?
+  city      String?
+  state     String?
+  zip       String?
+  country   String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  orders    Order[]
+  sessions  Session[]
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Product {
+  id          String         @id @default(uuid())
+  name        String
+  description String
+  price       Float
+  images      String[]
+  category    String
+  featured    Boolean        @default(false)
+  rating      Float          @default(0)
+  reviewCount Int            @default(0)
+  stock       Int            @default(0)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  colors      ProductColor[]
+  lengths     ProductLength[]
+  orderItems  OrderItem[]
+}
+
+model ProductColor {
+  id        String   @id @default(uuid())
+  name      String
+  value     String
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model ProductLength {
+  id        String   @id @default(uuid())
+  length    String
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  status          OrderStatus @default(PENDING)
+  total           Float
+  street          String
+  city            String
+  state           String
+  zip             String
+  country         String
+  paymentMethod   String
+  paymentLast4    String?
+  paymentBrand    String?
+  paymentEmail    String?
+  trackingNumber  String?
+  trackingCarrier String?
+  trackingUrl     String?
+  notes           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  items           OrderItem[]
+
+  @@index([userId])
+}
+
+model OrderItem {
+  id          String   @id @default(uuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  name        String
+  price       Float
+  quantity    Int
+  color       String?
+  length      String?
+
+  @@index([orderId])
+  @@index([productId])
+} 
