@@ -14,7 +14,13 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata = {
   title: "Lush Hair | Premium Hair Extensions",
   description: "Quality hair extensions for every style",
-    generator: 'v0.dev'
+  generator: 'v0.dev',
+  icons: {
+    icon: '/icon',
+    apple: '/icon'
+  },
+  manifest: '/manifest',
+  metadataBase: new URL('https://lushhair.zimpit.tech')
 }
 
 export default function RootLayout({
