@@ -1,104 +1,141 @@
-# Lush Hair E-Commerce Platform
+# LushHair E-commerce Platform
 
-An e-commerce website for selling premium hair extensions built with Next.js, Prisma, and Supabase.
+A modern e-commerce platform for hair products built with Next.js, Prisma, TypeScript, and Tailwind CSS.
 
 ## Features
 
-- User authentication (login, registration)
-- Product browsing and filtering
-- Shopping cart
-- Checkout process
-- Order history
-- Admin dashboard for product and order management
+- **User Authentication**: Complete user registration, login, and profile management
+- **Product Management**: Browse, filter, and search products by category, price, length, and color
+- **Shopping Cart**: Add products to cart, manage quantities, and checkout
+- **Order Processing**: Complete checkout flow with order confirmation
+- **Admin Dashboard**: Comprehensive admin panel for managing products and orders
+- **Responsive Design**: Mobile-first approach ensuring compatibility across all devices
 
-## Technologies
+## Tech Stack
 
-- Next.js 15
-- React 19
-- Prisma ORM
-- PostgreSQL (Supabase)
-- TailwindCSS
-- TypeScript
+- **Frontend**: Next.js 14, React, Tailwind CSS, shadcn/ui
+- **Backend**: Next.js API Routes, Prisma ORM
+- **Database**: PostgreSQL
+- **Authentication**: Custom JWT-based authentication
+- **Styling**: Tailwind CSS with dark mode support
 
-## Setup Instructions
+## Getting Started
 
-### 1. Clone the repository
+### Prerequisites
 
-```bash
-git clone <repository-url>
-cd lush-hair-ecommerce
+- Node.js 18+ and npm/pnpm
+- PostgreSQL database
+
+### Environment Setup
+
+Create a `.env` file in the root directory with the following variables:
+
+```
+# App
+NODE_ENV=development
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-nextauth-secret-key-minimum-32-chars
+
+# Database
+DATABASE_URL="postgresql://username:password@localhost:5432/lushhair_db"
+
+# Auth
+JWT_SECRET=your-jwt-secret-key-minimum-32-chars
+JWT_EXPIRES_IN=7d
+
+# Admin
+ADMIN_EMAIL=admin@lushhair.com
+ADMIN_PASSWORD=admin_secure_password
 ```
 
-### 2. Install dependencies
+Replace the placeholder values with your actual credentials.
 
-```bash
-npm install
-# or
-yarn install
-```
+### Installation
 
-### 3. Configure environment variables
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/codewithvivek19/LushHair_Ecommerce.git
+   cd LushHair_Ecommerce
+   ```
 
-Copy the `.env` file and update it with your Supabase credentials:
+2. Install dependencies:
+   ```bash
+   npm install
+   # or
+   pnpm install
+   ```
 
-```bash
-cp .env.example .env
-```
+3. Set up the database:
+   ```bash
+   npx prisma migrate dev
+   npx prisma db seed
+   ```
 
-Update the following values in your `.env` file:
-- `DATABASE_URL`: Your Supabase PostgreSQL connection string (with pgBouncer for connection pooling)
-- `DIRECT_URL`: Your direct Supabase PostgreSQL connection string (used for migrations)
+4. Start the development server:
+   ```bash
+   npm run dev
+   # or
+   pnpm dev
+   ```
 
-### 4. Set up the database
+5. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
-Run the database migration and seeding script:
+### Database Schema
 
-```bash
-chmod +x setup-db.sh
-./setup-db.sh
-```
+The application uses the following main data models:
+- User
+- Product (with relationships to Color and Length)
+- Order and OrderItem
+- Cart and CartItem
 
-Alternatively, you can run the commands manually:
+Run `npx prisma studio` to view and edit your database content through a visual interface.
 
-```bash
-npx prisma migrate dev --name init
-npm run db:seed
-```
+## API Routes
 
-### 5. Start the development server
+### Public Endpoints
 
-```bash
-npm run dev
-# or
-yarn dev
-```
+- `GET /api/products` - List all products with filtering options
+- `GET /api/products/:id` - Get single product details
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - User login
+- `GET /api/auth/me` - Get current user info
+- `POST /api/auth/logout` - User logout
+- `POST /api/orders` - Create a new order
+- `GET /api/orders` - List user's orders
 
-Visit `http://localhost:3000` to see the application.
+### Admin Endpoints
 
-## Demo Accounts
+- `POST /api/admin/auth/login` - Admin login
+- `GET /api/admin/products` - List all products (admin view)
+- `POST /api/admin/products` - Create new product
+- `GET /api/admin/products/:id` - Get product details
+- `PUT /api/admin/products/:id` - Update product
+- `DELETE /api/admin/products/:id` - Delete product
+- `GET /api/admin/orders` - List all orders
+- `GET /api/admin/orders/:id` - Get order details
+- `PUT /api/admin/orders/:id` - Update order status
 
-After running the seed script, you'll have access to these demo accounts:
+## Admin Access
 
-- Regular User:
-  - Email: user@example.com
-  - Password: password123
+To access the admin panel, navigate to `/admin` and use the following credentials:
+- Email: admin@lushhair.com
+- Password: admin_secure_password
 
-- Admin User:
-  - Email: admin@example.com
-  - Password: admin123
+## Deployment
 
-## Project Structure
+This application can be deployed on Vercel, Netlify, or any other platform that supports Next.js.
 
-- `/app`: Next.js application routes and pages
-- `/components`: React components
-- `/prisma`: Prisma schema and migrations
-- `/lib`: Utility functions
-- `/public`: Static assets
+### Vercel Deployment
 
-## Admin Features
+1. Push your code to GitHub
+2. Import the project in Vercel
+3. Configure environment variables
+4. Deploy
 
-The admin dashboard is accessible at `/admin` for users with admin privileges. From there, you can:
+## Contributing
 
-1. Manage products (add, edit, delete)
-2. View and update orders
-3. See sales analytics 
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details. 
