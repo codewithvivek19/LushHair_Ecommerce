@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { createSession, hashPassword, setAuthCookie } from '@/lib/auth'
-import { UserRole, UserStatus } from '@prisma/client'
+import { setAuthCookie } from '@/lib/auth'
+import { UserRole } from '@prisma/client'
 
 export async function POST(request: NextRequest) {
   try {
@@ -44,25 +44,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Hash the password
-    const hashedPassword = await hashPassword(password)
-
-    // Create the new user
+    // Store the password directly (no hashing)
     const user = await prisma.user.create({
       data: {
         name,
         email: email.toLowerCase(),
-        password: hashedPassword,
+        password: password, // Store password directly
         role: UserRole.USER,
-        status: UserStatus.ACTIVE,
       },
     })
 
-    // Create a session for the user
-    const token = await createSession(user.id)
-    
-    // Set the session token in a cookie
-    await setAuthCookie(token)
+    // Set auth cookie with the user's email
+    await setAuthCookie(user.email)
 
     // Create a user object without sensitive information
     const { password: _, ...safeUser } = user

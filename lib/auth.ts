@@ -1,57 +1,35 @@
 import { prisma } from './prisma';
-import * as bcrypt from 'bcryptjs';
-import * as crypto from 'crypto';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import { User, UserRole } from '@prisma/client';
 
 const TOKEN_EXPIRY = 7 * 24 * 60 * 60 * 1000; // 7 days
 
-// Create a session token for a user - simplified for dev
-export async function createSession(userId: string): Promise<string> {
-  const token = crypto.randomBytes(32).toString('hex');
-  
-  // Skip session creation in database for development
-  // Just return the token directly
-  return token;
-}
-
-// Validate a user's password
-export async function validatePassword(
+// Simple validation (no hashing)
+export function validatePassword(
   inputPassword: string,
-  hashedPassword: string
-): Promise<boolean> {
-  return bcrypt.compare(inputPassword, hashedPassword);
+  storedPassword: string
+): boolean {
+  return inputPassword === storedPassword;
 }
 
-// Hash a password
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 10);
-}
-
-// Get the current user from the session token
+// Get the current user from the cookie
 export async function getCurrentUser(req?: NextRequest): Promise<User | null> {
   try {
     const cookieStore = cookies();
-    const sessionToken = req 
-      ? req.cookies.get('session_token')?.value
-      : cookieStore.get('session_token')?.value;
+    const userEmail = req 
+      ? req.cookies.get('user_email')?.value
+      : cookieStore.get('user_email')?.value;
       
-    if (!sessionToken) {
+    if (!userEmail) {
       return null;
     }
     
-    // For development: directly look up admin user
-    const adminUser = await prisma.user.findFirst({
-      where: { role: UserRole.ADMIN }
+    // Look up the user by email
+    const user = await prisma.user.findUnique({
+      where: { email: decodeURIComponent(userEmail) }
     });
     
-    if (adminUser) {
-      return adminUser;
-    }
-    
-    // If no admin user, try to find a regular user
-    const user = await prisma.user.findFirst();
     return user;
   } catch (error) {
     console.error('Error getting current user:', error);
@@ -95,12 +73,12 @@ export async function userAuthMiddleware(req: NextRequest): Promise<NextResponse
 }
 
 // Function to set authentication cookie
-export async function setAuthCookie(token: string): Promise<void> {
+export async function setAuthCookie(userEmail: string): Promise<void> {
   const cookieStore = cookies();
   
   await cookieStore.set({
-    name: 'session_token',
-    value: token,
+    name: 'user_email',
+    value: encodeURIComponent(userEmail),
     httpOnly: true, 
     path: '/',
     secure: process.env.NODE_ENV === 'production',
@@ -112,5 +90,5 @@ export async function setAuthCookie(token: string): Promise<void> {
 // Function to clear authentication cookie
 export async function clearAuthCookie(): Promise<void> {
   const cookieStore = cookies();
-  await cookieStore.delete('session_token');
+  await cookieStore.delete('user_email');
 } 

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { createSession, setAuthCookie, validatePassword } from '@/lib/auth'
-import { UserStatus } from '@prisma/client'
+import { setAuthCookie, validatePassword } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,34 +26,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if the user is suspended - only if status field exists
-    if (user.status && user.status === 'SUSPENDED') {
-      return NextResponse.json(
-        { error: 'Account is suspended. Please contact support.' },
-        { status: 403 }
-      )
-    }
-
-    // Compare the provided password with the hashed password in the database
-    const passwordMatch = await validatePassword(password, user.password)
-
-    if (!passwordMatch) {
+    // Simply compare the passwords directly (no hashing)
+    if (!validatePassword(password, user.password)) {
       return NextResponse.json(
         { error: 'Invalid email or password' },
         { status: 401 }
       )
     }
 
-    // Create a session for the user - with error handling
-    try {
-      const token = await createSession(user.id)
-      // Set the session token in a cookie
-      await setAuthCookie(token)
-    } catch (error) {
-      console.error('Session creation error:', error)
-      // For development, set a direct token
-      await setAuthCookie('direct_user_session_' + user.id)
-    }
+    // Set auth cookie with user email
+    await setAuthCookie(user.email)
 
     // Create a user object without sensitive information
     const { password: _, ...safeUser } = user
