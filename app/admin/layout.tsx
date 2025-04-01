@@ -25,10 +25,8 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname()
 
-  // Skip the admin layout completely for the login page
-  if (pathname === "/admin") {
-    return null
-  }
+  // For the main /admin path, we'll still render the regular layout
+  // This allows the /admin page to become a landing page
 
   return (
     <SidebarProvider>

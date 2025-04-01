@@ -162,6 +162,7 @@ export default function Home() {
               target="_blank"
               rel="noopener noreferrer"
               className="group relative aspect-square overflow-hidden rounded-md"
+              style={{ position: 'relative' }}
             >
               <Image
                 src={`https://images.unsplash.com/photo-${1580618672591 + i}-eb180b1a973f?q=80&w=800&auto=format&fit=crop`}
@@ -195,7 +196,7 @@ function CategoryCard({
 }) {
   return (
     <Card className="group overflow-hidden">
-      <div className="relative h-64">
+      <div className="relative h-64" style={{ position: 'relative' }}>
         <Image
           src={image || "/placeholder.svg"}
           alt={title}

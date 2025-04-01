@@ -1,8 +1,18 @@
+"use client"
+
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useState, useEffect } from "react"
 
 export function RecentOrdersTable() {
+  // Use client-side state to prevent hydration mismatch
+  const [isClient, setIsClient] = useState(false)
+  
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+  
   const recentOrders = [
     {
       id: "ORD-7893",
@@ -41,6 +51,11 @@ export function RecentOrdersTable() {
     },
   ]
 
+  // Only render after client-side hydration to prevent mismatch
+  if (!isClient) {
+    return <div className="min-h-[200px] bg-muted/20"></div>
+  }
+
   return (
     <Table>
       <TableHeader>
@@ -61,7 +76,7 @@ export function RecentOrdersTable() {
               </Link>
             </TableCell>
             <TableCell>{order.customer}</TableCell>
-            <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
+            <TableCell>{order.date}</TableCell>
             <TableCell>${order.total.toFixed(2)}</TableCell>
             <TableCell>
               <OrderStatusBadge status={order.status} />

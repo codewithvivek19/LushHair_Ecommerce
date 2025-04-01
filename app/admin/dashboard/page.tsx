@@ -1,5 +1,8 @@
+"use client"
+
 import type React from "react"
 import Link from "next/link"
+import { useState, useEffect } from "react"
 import { ArrowRight, ArrowUpRight, DollarSign, Package, ShoppingCart, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -7,7 +10,33 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RecentOrdersTable } from "@/components/admin/recent-orders-table"
 import { SalesChart } from "@/components/admin/sales-chart"
 
+// Adding useId hook to generate stable IDs for elements
+import { useId } from "react"
+
 export default function AdminDashboardPage() {
+  const [isClient, setIsClient] = useState(false)
+  
+  // Generate stable IDs for tabs
+  const salesTabId = useId()
+  const ordersTabId = useId()
+  const customersTabId = useId()
+  
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+  
+  // Only render after client-side hydration to prevent mismatch
+  if (!isClient) {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+        </div>
+        <div className="min-h-[400px] bg-muted/20 animate-pulse rounded-md"></div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -49,9 +78,9 @@ export default function AdminDashboardPage() {
       {/* Charts */}
       <Tabs defaultValue="sales">
         <TabsList>
-          <TabsTrigger value="sales">Sales</TabsTrigger>
-          <TabsTrigger value="orders">Orders</TabsTrigger>
-          <TabsTrigger value="customers">Customers</TabsTrigger>
+          <TabsTrigger value="sales" id={salesTabId}>Sales</TabsTrigger>
+          <TabsTrigger value="orders" id={ordersTabId}>Orders</TabsTrigger>
+          <TabsTrigger value="customers" id={customersTabId}>Customers</TabsTrigger>
         </TabsList>
         <TabsContent value="sales" className="pt-4">
           <Card>

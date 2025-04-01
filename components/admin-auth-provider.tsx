@@ -51,16 +51,8 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     getAdminFromCookie()
   }, [])
 
-  // Protect admin routes
-  useEffect(() => {
-    if (!isLoading) {
-      // Redirect from admin pages if not authenticated as admin
-      if (pathname?.startsWith("/admin") && !admin && pathname !== "/admin") {
-        console.log("Redirecting to admin login because not authenticated")
-        router.push("/admin")
-      }
-    }
-  }, [pathname, admin, isLoading, router])
+  // For development, we're not protecting admin routes
+  // No redirect needed - remove the redirect effect
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true)
