@@ -43,6 +43,7 @@ export default function AdminProductsPage() {
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [stockFilter, setStockFilter] = useState("all")
   const [initialized, setInitialized] = useState(false)
+  const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 20, pages: 1 })
 
   useEffect(() => {
     setInitialized(true)
@@ -52,7 +53,14 @@ export default function AdminProductsPage() {
   const fetchProducts = async () => {
     setLoading(true)
     try {
-      const response = await fetch("/api/admin/products")
+      let url = "/api/admin/products?limit=100" // Fetch more products at once
+      
+      // Add filters if needed
+      if (categoryFilter !== "all") {
+        url += `&category=${encodeURIComponent(categoryFilter)}`
+      }
+      
+      const response = await fetch(url)
       
       if (!response.ok) {
         throw new Error("Failed to fetch products")
@@ -60,6 +68,7 @@ export default function AdminProductsPage() {
       
       const data = await response.json()
       setProducts(data.products || [])
+      setPagination(data.pagination || { total: 0, page: 1, limit: 20, pages: 1 })
     } catch (err) {
       console.error("Error fetching products:", err)
       setError("Error loading products")
@@ -68,13 +77,14 @@ export default function AdminProductsPage() {
     }
   }
 
+  // Apply client-side filters after getting data from API
   const filteredProducts = products.filter((product) => {
     // Filter by search query
     if (searchQuery && !product.name.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false
     }
     
-    // Filter by category
+    // Category is now handled by the API, but we keep it here for immediate UI filtering
     if (categoryFilter !== "all" && product.category !== categoryFilter) {
       return false
     }
@@ -117,7 +127,8 @@ export default function AdminProductsPage() {
       })
       
       if (!response.ok) {
-        throw new Error("Failed to delete product")
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to delete product")
       }
       
       // Remove product from state
@@ -128,11 +139,11 @@ export default function AdminProductsPage() {
         title: "Product deleted",
         description: "The product has been deleted successfully.",
       })
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error deleting product:", err)
       toast({
         title: "Error",
-        description: "Failed to delete product. Please try again.",
+        description: err.message || "Failed to delete product. Please try again.",
         variant: "destructive"
       })
     }
@@ -142,6 +153,7 @@ export default function AdminProductsPage() {
     // This would ideally be a batch operation on the backend
     // For now, we'll delete one by one
     let successCount = 0
+    let failCount = 0
     
     for (const productId of selectedProducts) {
       try {
@@ -151,9 +163,12 @@ export default function AdminProductsPage() {
         
         if (response.ok) {
           successCount++
+        } else {
+          failCount++
         }
       } catch (err) {
         console.error(`Error deleting product ${productId}:`, err)
+        failCount++
       }
     }
     
@@ -163,8 +178,8 @@ export default function AdminProductsPage() {
       setSelectedProducts([])
       
       toast({
-        title: "Products deleted",
-        description: `${successCount} of ${selectedProducts.length} products have been deleted.`,
+        title: `${successCount} products deleted`,
+        description: failCount > 0 ? `${failCount} products could not be deleted.` : `All selected products have been deleted.`,
       })
     } else {
       toast({
@@ -172,6 +187,17 @@ export default function AdminProductsPage() {
         description: "Failed to delete products. Please try again.",
         variant: "destructive"
       })
+    }
+  }
+
+  // Handle category filter change with API refresh
+  const handleCategoryFilterChange = (value: string) => {
+    setCategoryFilter(value)
+    // If changing to a server-side filter, refresh from API
+    if (value !== "all" && categoryFilter === "all") {
+      setTimeout(() => fetchProducts(), 0)
+    } else if (value === "all" && categoryFilter !== "all") {
+      setTimeout(() => fetchProducts(), 0)
     }
   }
 
@@ -198,94 +224,102 @@ export default function AdminProductsPage() {
 
       <Card>
         {loading ? (
-          <div className="flex h-[400px] items-center justify-center">
-            <LoadingSpinner size="large" />
+          <div className="flex h-[300px] items-center justify-center">
+            <LoadingSpinner />
           </div>
         ) : error ? (
-          <div className="flex h-[400px] flex-col items-center justify-center p-6">
-            <div className="text-center">
-              <h3 className="mb-2 text-lg font-medium text-red-500">{error}</h3>
-              <Button onClick={fetchProducts} className="mt-4">Try Again</Button>
-            </div>
+          <div className="flex h-[200px] flex-col items-center justify-center text-center">
+            <p className="text-red-500">{error}</p>
+            <Button 
+              variant="outline" 
+              className="mt-4"
+              onClick={fetchProducts}
+            >
+              Retry
+            </Button>
           </div>
         ) : (
-          <>
-            <div className="p-6">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex w-full max-w-sm items-center gap-2">
-                  <Search className="h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search products..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="h-9"
-                    suppressHydrationWarning
-                  />
-                </div>
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <Select 
-                    value={categoryFilter} 
-                    onValueChange={setCategoryFilter}
-                  >
-                    <SelectTrigger className="h-9 w-full sm:w-[150px]" suppressHydrationWarning>
-                      <SelectValue placeholder="Category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      {categories.map(category => (
-                        <SelectItem key={category} value={category}>
-                          {category.charAt(0).toUpperCase() + category.slice(1).replace('-', ' ')}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select 
-                    value={stockFilter} 
-                    onValueChange={setStockFilter}
-                  >
-                    <SelectTrigger className="h-9 w-full sm:w-[150px]" suppressHydrationWarning>
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="in-stock">In Stock</SelectItem>
-                      <SelectItem value="low-stock">Low Stock</SelectItem>
-                      <SelectItem value="out-of-stock">Out of Stock</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {selectedProducts.length > 0 && (
-                    <Button variant="destructive" size="sm" onClick={handleBulkDelete} className="h-9" suppressHydrationWarning>
-                      Delete ({selectedProducts.length})
-                    </Button>
-                  )}
-                </div>
+          <div>
+            {/* Filters and search */}
+            <div className="flex flex-col space-y-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+              <div className="flex flex-1 items-center space-x-2">
+                <Input
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-8 w-[150px] lg:w-[250px]"
+                />
+                <Select value={categoryFilter} onValueChange={handleCategoryFilterChange}>
+                  <SelectTrigger className="h-8 w-[130px]">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category.charAt(0).toUpperCase() + category.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={stockFilter} onValueChange={setStockFilter}>
+                  <SelectTrigger className="h-8 w-[130px]">
+                    <SelectValue placeholder="Stock" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Stock</SelectItem>
+                    <SelectItem value="in-stock">In Stock</SelectItem>
+                    <SelectItem value="low-stock">Low Stock (≤ 10)</SelectItem>
+                    <SelectItem value="out-of-stock">Out of Stock</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+              {selectedProducts.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    {selectedProducts.length} selected
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleBulkDelete}
+                    className="h-8 gap-1"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </Button>
+                </div>
+              )}
             </div>
 
+            {/* Products table */}
             <div className="border-t">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-12">
+                    <TableHead className="w-[40px]">
                       <Checkbox
-                        checked={selectedProducts.length === filteredProducts.length && filteredProducts.length > 0}
+                        checked={
+                          filteredProducts.length > 0 &&
+                          selectedProducts.length === filteredProducts.length
+                        }
                         onCheckedChange={handleSelectAll}
                         aria-label="Select all products"
-                        suppressHydrationWarning
                       />
                     </TableHead>
-                    <TableHead>Product</TableHead>
+                    <TableHead className="w-[80px]">Image</TableHead>
+                    <TableHead>Name</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Price</TableHead>
                     <TableHead>Stock</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-12">Actions</TableHead>
+                    <TableHead>Featured</TableHead>
+                    <TableHead className="w-[100px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredProducts.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="h-24 text-center">
+                      <TableCell colSpan={8} className="h-[100px] text-center">
                         No products found.
                       </TableCell>
                     </TableRow>
@@ -297,35 +331,50 @@ export default function AdminProductsPage() {
                             checked={selectedProducts.includes(product.id)}
                             onCheckedChange={() => handleSelectProduct(product.id)}
                             aria-label={`Select ${product.name}`}
-                            suppressHydrationWarning
                           />
                         </TableCell>
                         <TableCell>
-                          <div className="font-medium">{product.name}</div>
-                          <div className="text-sm text-muted-foreground">ID: {product.id.substring(0, 8)}...</div>
-                        </TableCell>
-                        <TableCell>{product.category.charAt(0).toUpperCase() + product.category.slice(1).replace('-', ' ')}</TableCell>
-                        <TableCell>${product.price.toFixed(2)}</TableCell>
-                        <TableCell>{product.stock}</TableCell>
-                        <TableCell>
-                          <div
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                              product.stock > 10
-                                ? "bg-green-100 text-green-800"
-                                : product.stock > 0
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {product.stock > 10 ? "In Stock" : product.stock > 0 ? "Low Stock" : "Out of Stock"}
+                          <div className="h-[40px] w-[40px] overflow-hidden rounded-md">
+                            <img
+                              src={product.images[0] || "https://placehold.co/400?text=No+Image"}
+                              alt={product.name}
+                              className="h-full w-full object-cover"
+                            />
                           </div>
+                        </TableCell>
+                        <TableCell className="font-medium">{product.name}</TableCell>
+                        <TableCell>{product.category}</TableCell>
+                        <TableCell>${product.price.toFixed(2)}</TableCell>
+                        <TableCell>
+                          <span
+                            className={
+                              product.stock === 0
+                                ? "text-red-500"
+                                : product.stock <= 10
+                                ? "text-amber-500"
+                                : ""
+                            }
+                          >
+                            {product.stock}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {product.featured ? (
+                            <span className="inline-flex h-6 items-center rounded-full bg-green-100 px-2 text-xs font-medium text-green-800">
+                              Yes
+                            </span>
+                          ) : (
+                            <span className="inline-flex h-6 items-center rounded-full bg-gray-100 px-2 text-xs font-medium text-gray-800">
+                              No
+                            </span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" suppressHydrationWarning>
+                              <Button variant="ghost" size="icon">
                                 <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Actions</span>
+                                <span className="sr-only">Open menu</span>
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
@@ -338,8 +387,8 @@ export default function AdminProductsPage() {
                                 </Link>
                               </DropdownMenuItem>
                               <DropdownMenuItem
+                                className="text-red-600"
                                 onClick={() => handleDeleteProduct(product.id)}
-                                className="text-red-600 focus:text-red-600"
                               >
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Delete
@@ -352,8 +401,14 @@ export default function AdminProductsPage() {
                   )}
                 </TableBody>
               </Table>
+              {/* Pagination info */}
+              <div className="flex items-center justify-between p-4">
+                <div className="text-sm text-muted-foreground">
+                  Showing {filteredProducts.length} of {pagination.total} products
+                </div>
+              </div>
             </div>
-          </>
+          </div>
         )}
       </Card>
     </div>
